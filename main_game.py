@@ -1,147 +1,268 @@
 import pygame
-import gym
-from gym import spaces
-import numpy as np
-import random
 import math
+import random
 
-# Initialize pygame
+
 pygame.init()
 
-# Define your game environment as a subclass of gym.Env
-class AngryBirdsEnv(gym.Env):
-    def __init__(self):
-        super(AngryBirdsEnv, self).__init__()
 
-        # Define the action space: Let's use 5 angles and 5 strengths
-        self.action_space = spaces.Discrete(25)  # 5 angles * 5 strengths
+WIDTH, HEIGHT = 800, 600
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Enhanced Angry Birds with Multiple Levels")
 
-        # Observation space: bird's position (x, y) and block positions
-        self.observation_space = spaces.Box(low=0, high=800, shape=(12,), dtype=np.float32)
 
-        # Initialize game variables
-        self.screen = pygame.display.set_mode((800, 600))
-        pygame.display.set_caption("Angry Birds")
-        self.clock = pygame.time.Clock()
-        self.reset()
+SKY_BLUE = (135, 206, 235)
+BIRD_RED = (255, 50, 50)
+BIRD_YELLOW = (255, 255, 0)
+BIRD_BLUE = (50, 50, 255)
+GRASS_GREEN = (0, 200, 0)
+BLOCK_BROWN = (139, 69, 19)
+BOMB_BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
 
-    def reset(self):
-        """Reset the environment (start a new game)."""
-        self.bird_pos = [150, 300]
-        self.bird_velocity = [0, 0]
-        self.bird_moving = False
-        self.blocks = self.create_blocks()  # Assume this function creates blocks for the level
-        self.attempts = 0
-        self.max_attempts = 3
-        return self._get_obs()
 
-    def _get_obs(self):
-        """Return the current state as the observation."""
-        obs = np.array(self.bird_pos + [block["pos"][0] for block in self.blocks])
-        return obs
+clock = pygame.time.Clock()
+gravity = 0.5
+bird_radius = 15
+bird_pos = [150, 300]
+bird_velocity = [0, 0]
+bird_moving = False
+bird_type = "normal"  
+bird_color = BIRD_RED
 
-    def step(self, action):
-        """Apply action and return new state, reward, done, info."""
-        angle_idx = action // 5
-        strength_idx = action % 5
-        angle = angle_idx * (math.pi / 4)  # Convert to radians
-        strength = (strength_idx + 1) * 10  # Scale strength
 
-        # Apply the action (launch the bird)
-        self.bird_velocity = [strength * math.cos(angle), -strength * math.sin(angle)]
-        self.bird_moving = True
-        self.attempts += 1  # Increment attempts
+slingshot_pos = [150, 300]
+is_pulled = False
+attempts = 0
+score = 0
+max_attempts = 3
+current_level = 0
+levels = []  
+bombs = []  
+game_over_flag = False  
 
-        # Move bird and check collisions
-        self._move_bird()
 
-        # Calculate reward based on collision with blocks or bombs
-        reward = self._calculate_reward()
+def create_level(blocks_count, block_width, block_height):
+    blocks = []
+    start_x = 600
+    start_y = 450
+    for i in range(blocks_count):
+        x = start_x + (i % 3) * block_width  
+        y = start_y - (i // 3) * block_height  
+        blocks.append({"pos": [x, y], "width": block_width, "height": block_height, "color": BLOCK_BROWN, "destroyed": False})
+    return blocks
 
-        # Check if the game is done (level completed or attempts over)
-        done = self._check_done()
 
-        # Return state, reward, done, and optional info
-        return self._get_obs(), reward, done, {}
+def create_bombs(num_bombs):
+    return [
+        {"pos": [random.randint(500, 700), random.randint(400, 500)], "radius": 20, "destroyed": False}
+        for _ in range(num_bombs)
+    ]
 
-    def _move_bird(self):
-        """Move the bird and handle collisions."""
-        if self.bird_moving:
-            self.bird_pos[0] += self.bird_velocity[0]
-            self.bird_pos[1] += self.bird_velocity[1]
-            self.bird_velocity[1] += 0.5  # Gravity
 
-            # Check ground collision
-            if self.bird_pos[1] >= 550:  # Hit ground
-                self.bird_pos[1] = 550
-                self.bird_velocity = [0, 0]
-                self.bird_moving = False
+for level in range(5):  
+    blocks_count = (level + 1) * 3  
+    block_width = 50 - level * 5  
+    block_height = 50
+    levels.append(create_level(blocks_count, block_width, block_height))
+    bombs.append(create_bombs(level + 1))  
 
-    def _calculate_reward(self):
-        """Calculate reward based on collisions."""
-        reward = 0
-        for block in self.blocks:
-            if not block["destroyed"] and self._check_collision(block):
+def draw_bird(pos):
+    pygame.draw.circle(screen, bird_color, (int(pos[0]), int(pos[1])), bird_radius)
+
+def draw_blocks(blocks):
+    for block in blocks:
+        if not block["destroyed"]:
+            pygame.draw.rect(screen, block["color"], pygame.Rect(block["pos"][0], block["pos"][1], block["width"], block["height"]))
+
+def draw_bombs(bombs):
+    for bomb in bombs:
+        if not bomb["destroyed"]:
+            pygame.draw.circle(screen, BOMB_BLACK, bomb["pos"], bomb["radius"])
+
+def check_collision(bird_pos, block):
+    bird_rect = pygame.Rect(bird_pos[0] - bird_radius, bird_pos[1] - bird_radius, bird_radius * 2, bird_radius * 2)
+    block_rect = pygame.Rect(block["pos"][0], block["pos"][1], block["width"], block["height"])
+    return bird_rect.colliderect(block_rect)
+
+def check_bomb_collision(bird_pos, bomb):
+    distance = math.sqrt((bomb["pos"][0] - bird_pos[0]) ** 2 + (bomb["pos"][1] - bird_pos[1]) ** 2)
+    return distance < bomb["radius"] + bird_radius
+
+def reset_bird():
+    global bird_pos, bird_velocity, bird_moving, is_pulled, bird_type, bird_color
+    bird_pos = [slingshot_pos[0], slingshot_pos[1]]
+    bird_velocity = [0, 0]
+    bird_moving = False
+    is_pulled = False
+    
+    if bird_type == "normal":
+        bird_type = "fast"
+        bird_color = BIRD_YELLOW
+    elif bird_type == "fast":
+        bird_type = "glide"
+        bird_color = BIRD_BLUE
+    else:
+        bird_type = "normal"
+        bird_color = BIRD_RED
+
+def draw_trajectory(start, end):
+    dx = start[0] - end[0]
+    dy = start[1] - end[1]
+    for i in range(1, 30, 2):
+        dot_x = start[0] - (dx * i / 30)
+        dot_y = start[1] - (dy * i / 30) + (0.5 * gravity * (i ** 2) / 10)
+        pygame.draw.circle(screen, BLACK, (int(dot_x), int(dot_y)), 2)
+
+def game_over(blocks):
+    return all(block["destroyed"] for block in blocks)
+
+def level_failed():
+    return attempts >= max_attempts
+
+def reset_level():
+    global attempts, bird_moving, bird_pos, levels, bombs, current_level
+    attempts = 0
+    bird_moving = False
+    bird_pos = [slingshot_pos[0], slingshot_pos[1]]
+
+def next_level():
+    global current_level, game_over_flag
+    current_level += 1
+    if current_level >= len(levels):
+        game_over_flag = True  
+
+def draw_background():
+    
+    screen.fill(SKY_BLUE)
+    
+    
+    pygame.draw.rect(screen, GRASS_GREEN, pygame.Rect(0, HEIGHT - 50, WIDTH, 50))
+    
+    
+    pygame.draw.circle(screen, WHITE, (200, 100), 30)
+    pygame.draw.circle(screen, WHITE, (230, 100), 40)
+    pygame.draw.circle(screen, WHITE, (260, 100), 30)
+    
+    pygame.draw.circle(screen, WHITE, (500, 80), 30)
+    pygame.draw.circle(screen, WHITE, (530, 80), 40)
+    pygame.draw.circle(screen, WHITE, (560, 80), 30)
+
+
+def update_bird_movement():
+    global bird_velocity, bird_pos
+    if bird_type == "normal":
+        bird_velocity[1] += gravity  
+    elif bird_type == "fast":
+        
+        bird_velocity[1] = 0
+        bird_velocity[0] *= 1.1  
+    elif bird_type == "glide":
+        bird_velocity[1] += gravity * 0.3  
+
+    bird_pos[0] += bird_velocity[0]
+    bird_pos[1] += bird_velocity[1]
+
+
+running = True
+while running:
+    draw_background()
+
+    
+    if game_over_flag:
+        font = pygame.font.SysFont(None, 55)
+        win_text = font.render("Congratulations! All Levels Completed!", True, BLACK)
+        screen.blit(win_text, (WIDTH // 2 - 250, HEIGHT // 2))
+        pygame.display.update()
+        pygame.time.delay(5000)  
+        running = False  
+        continue  
+
+    
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            mouse_pos = pygame.mouse.get_pos()
+            if math.hypot(mouse_pos[0] - slingshot_pos[0], mouse_pos[1] - slingshot_pos[1]) < bird_radius:
+                is_pulled = True
+        elif event.type == pygame.MOUSEBUTTONUP:
+            if is_pulled:
+                bird_velocity[0] = (slingshot_pos[0] - pygame.mouse.get_pos()[0]) * 0.2
+                bird_velocity[1] = (slingshot_pos[1] - pygame.mouse.get_pos()[1]) * 0.2
+                bird_moving = True
+                is_pulled = False
+                attempts += 1
+
+    
+    if bird_moving:
+        update_bird_movement()
+
+        
+        if bird_pos[1] + bird_radius > HEIGHT - 50:  
+            bird_velocity[1] *= -0.7
+            bird_pos[1] = HEIGHT - 50 - bird_radius
+
+        
+        for block in levels[current_level]:
+            if not block["destroyed"] and check_collision(bird_pos, block):
                 block["destroyed"] = True
-                reward += 10  # Give reward for destroying a block
-        return reward
+                score += 10
+                print(f"Score: {score}")
 
-    def _check_collision(self, block):
-        """Check if the bird collides with a block."""
-        return math.hypot(block["pos"][0] - self.bird_pos[0], block["pos"][1] - self.bird_pos[1]) < 20
+        
+        for bomb in bombs[current_level]:
+            if not bomb["destroyed"] and check_bomb_collision(bird_pos, bomb):
+                bomb["destroyed"] = True
+                print("Bomb exploded!")
+                
+                for block in levels[current_level]:
+                    if math.hypot(bomb["pos"][0] - block["pos"][0], bomb["pos"][1] - block["pos"][1]) < 100:
+                        block["destroyed"] = True
+                        score += 10
+                print(f"Score: {score}")
 
-    def _check_done(self):
-        """Check if the game is done (all blocks destroyed or attempts over)."""
-        if all(block["destroyed"] for block in self.blocks):
-            return True  # Level complete
-        if self.attempts >= self.max_attempts:
-            return True  # Game over
-        return False
+    
+    if is_pulled:
+        mouse_pos = pygame.mouse.get_pos()
+        bird_pos = list(mouse_pos)
+        draw_trajectory(slingshot_pos, mouse_pos)
 
-    def render(self, mode='human'):
-        """Render the game for visualization (using pygame)."""
-        self.screen.fill((255, 255, 255))
+    
+    draw_bird(bird_pos)
+    draw_blocks(levels[current_level])
+    draw_bombs(bombs[current_level])
 
-        # Draw bird
-        pygame.draw.circle(self.screen, (255, 0, 0), (int(self.bird_pos[0]), int(self.bird_pos[1])), 10)
+    
+    if game_over(levels[current_level]):
+        font = pygame.font.SysFont(None, 55)
+        win_text = font.render("Level Complete!", True, BLACK)
+        screen.blit(win_text, (WIDTH // 2 - 150, HEIGHT // 2))
+        pygame.display.update()
+        pygame.time.delay(2000)  
+        next_level()
+        reset_level()
+    elif level_failed():
+        font = pygame.font.SysFont(None, 55)
+        lose_text = font.render("Level Failed! Resetting...", True, BLACK)
+        screen.blit(lose_text, (WIDTH // 2 - 200, HEIGHT // 2))
+        pygame.display.update()
+        pygame.time.delay(2000)  
+        reset_level()
 
-        # Draw blocks
-        for block in self.blocks:
-            if not block["destroyed"]:
-                pygame.draw.rect(self.screen, (0, 128, 0), pygame.Rect(block["pos"][0], block["pos"][1], 30, 30))
+    else:
+        font = pygame.font.SysFont(None, 25)
+        score_text = font.render(f"Attempts: {attempts}/{max_attempts}  Score: {score}", True, BLACK)
+        screen.blit(score_text, (10, 10))
 
-        pygame.display.flip()
-        self.clock.tick(30)
+    
+    pygame.display.update()
+    clock.tick(60)
 
-    def create_blocks(self):
-        """Create blocks for the level."""
-        return [{"pos": [600 + i * 50, 450], "destroyed": False} for i in range(3)]
+    
+    if bird_pos[0] > WIDTH or bird_pos[1] > HEIGHT:
+        reset_bird()
 
-def play_game():
-    env = AngryBirdsEnv()
-    done = False
-    action = 0  # Default action index
-    while not done:
-        env.render()
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                done = True
-            elif event.type == pygame.KEYDOWN:
-                # Control actions with keyboard
-                if event.key == pygame.K_UP:
-                    action = (action + 5) % 25
-                elif event.key == pygame.K_DOWN:
-                    action = (action - 5) % 25
-                elif event.key == pygame.K_SPACE:
-                    _, _, done, _ = env.step(action)
-                    if done:
-                        print("Game Over!")
-                        env.reset()
-                        done = False
 
-        pygame.display.flip()
-
-    pygame.quit()
-
-# Run the game
-play_game()
+pygame.quit()
