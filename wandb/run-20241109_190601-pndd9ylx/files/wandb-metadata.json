@@ -1,0 +1,38 @@
+{
+  "os": "macOS-14.6.1-arm64-arm-64bit",
+  "python": "3.10.7",
+  "startedAt": "2024-11-10T03:06:01.912632Z",
+  "program": "/Users/luaiabuelsamen/Desktop/game/train_agent.py",
+  "codePath": "train_agent.py",
+  "git": {
+    "commit": "6bd7c1037eb7ae67b5075246b37ccb866c2ed8f6"
+  },
+  "email": "luai.abuelsamen@mail.mcgill.ca",
+  "root": "/Users/luaiabuelsamen/Desktop/game",
+  "host": "wifi-10-41-180-42.wifi.berkeley.edu",
+  "username": "luaiabuelsamen",
+  "executable": "/Users/luaiabuelsamen/Desktop/game/venv/bin/python",
+  "codePathLocal": "train_agent.py",
+  "cpu_count": 8,
+  "cpu_count_logical": 8,
+  "disk": {
+    "/": {
+      "total": "245107195904",
+      "used": "238838468608"
+    }
+  },
+  "memory": {
+    "total": "8589934592"
+  },
+  "cpu": {
+    "count": 8,
+    "countLogical": 8
+  },
+  "apple": {
+    "name": "Apple M1",
+    "ecpuCores": 4,
+    "pcpuCores": 4,
+    "gpuCores": 7,
+    "memoryGb": 8
+  }
+}
