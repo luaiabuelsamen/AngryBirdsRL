@@ -3,7 +3,7 @@
 ## Overview
 This project implements a Deep Q-Network to solve the classic CartPole control problem. The agent learns to balance a pole attached to a cart by applying horizontal forces to the cart. This implementation includes visualization tools, model persistence, and interactive gameplay modes.
 
-![](https://github.com/luaiabuelsamen/CartPoleRL/demo.gif)
+![](https://github.com/luaiabuelsamen/CartPoleRL/blob/master/demo.gif)
 
 ## System Architecture
 
