@@ -1,132 +1,145 @@
-# Angry Birds RL Agent
+# CartPole DQN Implementation
 
-This project uses Reinforcement Learning (RL) to train an agent to play the Angry Birds game. The agent is trained using the PPO (Proximal Policy Optimization) algorithm from Stable Baselines 3. It logs training progress and performance metrics using WandB and provides evaluation functionality.
+## Overview
+This project implements a Deep Q-Network to solve the classic CartPole control problem. The agent learns to balance a pole attached to a cart by applying horizontal forces to the cart. This implementation includes visualization tools, model persistence, and interactive gameplay modes.
 
-## Requirements
+https://drive.google.com/file/d/1KzoAuRUuY_XgaLYR8UiQqbkZALK_mGaZ/view?usp=sharing
 
-To set up and run this project, make sure you have the following dependencies installed:
+## System Architecture
 
-- Python 3.10 or higher
-- [Stable Baselines 3](https://stable-baselines3.readthedocs.io/)
-- [WandB](https://wandb.ai/)
-- [PyTorch](https://pytorch.org/)
-- [TensorFlow (optional)](https://www.tensorflow.org/)
-- [tqdm and rich](https://github.com/tqdm/tqdm) (for progress bar functionality)
+### Physical System Dynamics
+The CartPole system consists of a cart that can move horizontally and a pole that can rotate around a pivot point on the cart. The system's state is described by four variables:
 
-### Install dependencies
+- $x$: Cart position
+- $\dot{x}$: Cart velocity
+- $\theta$: Pole angle
+- $\dot{\theta}$: Pole angular velocity
 
-You can install the required dependencies using `pip`:
+The equations of motion for the system are:
 
+$\ddot{\theta} = \frac{g \sin(\theta) - \cos(\theta)[\frac{F + ml\dot{\theta}^2\sin(\theta)}{M + m}]}{l[\frac{4}{3} - \frac{m\cos^2(\theta)}{M + m}]}$
+
+$\ddot{x} = \frac{F + ml[\dot{\theta}^2\sin(\theta) - \ddot{\theta}\cos(\theta)]}{M + m}$
+
+Where:
+- $g$: Gravity constant
+- $F$: Applied force
+- $m$: Pole mass
+- $M$: Cart mass
+- $l$: Pole length
+
+### DQN Architecture
+The DQN uses a neural network to approximate the Q-function:
+
+$Q(s, a) \approx r + \gamma \max_{a'} Q(s', a')$
+
+Network structure:
+```
+Input Layer (4) → Hidden Layer (64) → ReLU → Hidden Layer (64) → ReLU → Output Layer (2)
+```
+
+## Project Structure
+```
+.
+├── main_game.py       # Interactive game environment
+├── train_model.py     # DQN training implementation
+├── visualize_rl.py    # Training visualization tools
+├── models/            # Saved model checkpoints
+└── logs/             # Training logs and metrics
+```
+
+## Key Components
+
+### 1. State Space
+- Normalized state vector: $[x/W, \dot{x}/5, \theta/(\pi/2), \dot{\theta}/2]$
+- Where W is screen width
+
+### 2. Action Space
+- Binary action space: {left force (-0.2), right force (0.2)}
+
+### 3. Reward Structure
+- +1 for each timestep the pole remains upright
+- 0 on episode termination
+
+### 4. Training Parameters
+```python
+MEMORY_SIZE = 100000    # Experience replay buffer size
+BATCH_SIZE = 64         # Training batch size
+GAMMA = 0.99           # Discount factor
+EPSILON_START = 1.0     # Initial exploration rate
+EPSILON_END = 0.01      # Final exploration rate
+EPSILON_DECAY = 0.995   # Exploration decay rate
+```
+
+## Running the Project
+
+### Prerequisites
 ```bash
-pip install -r requirements.txt
+poetry install
 ```
 
-Or, for extra functionality (including the progress bar), use:
-
+### Training
 ```bash
-pip install stable-baselines3[extra]
+python train_model.py
 ```
+This will:
+1. Initialize the DQN agent
+2. Train for specified episodes
+3. Save model checkpoints and logs
 
-### Create a `requirements.txt` for convenience
-
-```txt
-stable-baselines3
-wandb
-torch
-tqdm
-rich
-```
-
-## Setup
-
-1. **Clone the repository:**
-
-   ```bash
-   git clone https://github.com/your-username/angry-birds-rl.git
-   cd angry-birds-rl
-   ```
-
-2. **Install dependencies:**
-
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. **Set up WandB (if not already set up):**
-
-   If you don’t have a WandB account, you can create one [here](https://wandb.ai/). Then, log in:
-
-   ```bash
-   wandb login
-   ```
-
-4. **Ensure your environment supports GPU (optional):**
-
-   If you have a CUDA-capable GPU, make sure you have the correct drivers installed and that PyTorch is configured to use CUDA. Otherwise, the script will default to CPU.
-
-## Training the Agent
-
-To start training the agent, run the following command:
-
+### Playing
 ```bash
-python train_agent.py
+python main_game.py
 ```
+Features:
+- Switch between AI and human control with 'M' key
+- Use arrow keys for manual control
+- Watch trained agent perform
 
-### Arguments:
-
-- `game`: Instance of the `Game` class used in the training.
-- `total_timesteps`: Total training steps (default is 1,000,000).
-- `eval_freq`: Frequency of evaluation in terms of timesteps (default is 10,000).
-- `save_freq`: Frequency of saving model checkpoints in terms of timesteps (default is 50,000).
-- `log_freq`: Frequency of logging metrics (default is 1,000).
-- `n_envs`: Number of parallel environments for training (default is 4).
-- `load_path`: Path to load a pre-trained model (optional).
-
-Example:
-
+### Visualization
 ```bash
-python train_agent.py
+python visualize_rl.py
+```
+Generates plots for:
+- Training rewards
+- Episode lengths
+- Learning curves
+- Q-value distributions
+
+## Performance Metrics
+The agent typically achieves:
+- Convergence within 500-1000 episodes
+- Average episode length >200 steps after training
+- Stable pole balancing for extended periods
+
+## Implementation Notes
+
+### Double DQN
+Uses two networks to reduce overestimation:
+1. Policy network: Action selection
+2. Target network: Value estimation
+
+Update rule:
+```python
+target = reward + GAMMA * target_net(next_state).max()
+loss = MSE(policy_net(state), target)
 ```
 
-This will train the agent on the Angry Birds game using the PPO algorithm, logging training metrics to WandB and saving periodic checkpoints.
-
-## Evaluating the Agent
-
-Once the agent is trained, you can evaluate its performance using the following command:
-
-```bash
-python evaluate_agent.py
+### Experience Replay
+Stores transitions $(s, a, r, s')$ in circular buffer:
+```python
+self.memory.append((state, action, reward, next_state, done))
 ```
 
-The agent will be evaluated across 100 episodes, and the results (mean reward, success rate, etc.) will be printed to the console.
+### Exploration Strategy
+Epsilon-greedy with decay:
+```python
+ε = max(EPSILON_END, ε * EPSILON_DECAY)
+```
 
-### Evaluation Metrics:
+## Future Improvements
+- Prioritized Experience Replay
+- Dueling DQN architecture
+- Noisy Networks for exploration
+- Multi-step returns
 
-- **Mean Reward**: Average reward per episode.
-- **Success Rate**: Percentage of episodes where the agent succeeds.
-- **Mean Episode Length**: Average number of steps per episode.
-
-## Logging and Checkpoints
-
-- **WandB**: Logs training metrics to [WandB](https://wandb.ai/), including rewards and training time.
-- **Checkpoints**: Models are saved every `save_freq` timesteps.
-- **Training Stats**: Stats are saved periodically and include the best mean reward and the total training time.
-
-## Example Output
-
-When training completes, the following files will be saved:
-
-- `final_model`: The final trained model.
-- `final_stats.json`: Training stats including the final mean reward and total timesteps.
-- `checkpoints/`: Folder containing checkpointed models.
-- `logs/`: Folder containing training logs.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Acknowledgments
-
-- This project uses [Stable Baselines 3](https://stable-baselines3.readthedocs.io/) for RL training.
-- [WandB](https://wandb.ai/) is used for logging and visualization.
-- Thanks to the creators of the Angry Birds game and for their inspiration in creating this project!

@@ -1,0 +1,212 @@
+[
+    {
+        "episode": 0,
+        "total_reward": 76.0,
+        "epsilon": 0.9322301194154049,
+        "steps": 14
+    },
+    {
+        "episode": 1,
+        "total_reward": 61.0,
+        "epsilon": 0.6832098777212641,
+        "steps": 76
+    },
+    {
+        "episode": 2,
+        "total_reward": 48.0,
+        "epsilon": 0.5344229416520513,
+        "steps": 125
+    },
+    {
+        "episode": 3,
+        "total_reward": 110.0,
+        "epsilon": 0.3063705780533402,
+        "steps": 236
+    },
+    {
+        "episode": 4,
+        "total_reward": 73.0,
+        "epsilon": 0.21142436319205632,
+        "steps": 310
+    },
+    {
+        "episode": 5,
+        "total_reward": 81.0,
+        "epsilon": 0.14016760486247823,
+        "steps": 392
+    },
+    {
+        "episode": 6,
+        "total_reward": 88.0,
+        "epsilon": 0.08972259762946533,
+        "steps": 481
+    },
+    {
+        "episode": 7,
+        "total_reward": 46.0,
+        "epsilon": 0.0708902705368767,
+        "steps": 528
+    },
+    {
+        "episode": 8,
+        "total_reward": 38.0,
+        "epsilon": 0.05830244700006734,
+        "steps": 567
+    },
+    {
+        "episode": 9,
+        "total_reward": 40.0,
+        "epsilon": 0.047471515157588115,
+        "steps": 608
+    },
+    {
+        "episode": 10,
+        "total_reward": 59.0,
+        "epsilon": 0.03514130927386981,
+        "steps": 668
+    },
+    {
+        "episode": 11,
+        "total_reward": 58.0,
+        "epsilon": 0.026144461565619025,
+        "steps": 727
+    },
+    {
+        "episode": 12,
+        "total_reward": 67.0,
+        "epsilon": 0.018592988164936427,
+        "steps": 795
+    },
+    {
+        "episode": 13,
+        "total_reward": 78.0,
+        "epsilon": 0.012513320603703188,
+        "steps": 874
+    },
+    {
+        "episode": 14,
+        "total_reward": 41.0,
+        "epsilon": 0.010137759008060509,
+        "steps": 916
+    },
+    {
+        "episode": 15,
+        "total_reward": 46.0,
+        "epsilon": 0.01,
+        "steps": 963
+    },
+    {
+        "episode": 16,
+        "total_reward": 229.0,
+        "epsilon": 0.01,
+        "steps": 1193
+    },
+    {
+        "episode": 17,
+        "total_reward": 209.0,
+        "epsilon": 0.01,
+        "steps": 1403
+    },
+    {
+        "episode": 18,
+        "total_reward": 112.0,
+        "epsilon": 0.01,
+        "steps": 1516
+    },
+    {
+        "episode": 19,
+        "total_reward": 220.0,
+        "epsilon": 0.01,
+        "steps": 1737
+    },
+    {
+        "episode": 20,
+        "total_reward": 202.0,
+        "epsilon": 0.01,
+        "steps": 1940
+    },
+    {
+        "episode": 21,
+        "total_reward": 81.0,
+        "epsilon": 0.01,
+        "steps": 2022
+    },
+    {
+        "episode": 22,
+        "total_reward": 1799.0,
+        "epsilon": 0.01,
+        "steps": 3822
+    },
+    {
+        "episode": 23,
+        "total_reward": 1711.0,
+        "epsilon": 0.01,
+        "steps": 5534
+    },
+    {
+        "episode": 24,
+        "total_reward": 1844.0,
+        "epsilon": 0.01,
+        "steps": 7379
+    },
+    {
+        "episode": 25,
+        "total_reward": 3045.0,
+        "epsilon": 0.01,
+        "steps": 10425
+    },
+    {
+        "episode": 26,
+        "total_reward": 3323.0,
+        "epsilon": 0.01,
+        "steps": 13749
+    },
+    {
+        "episode": 27,
+        "total_reward": 3483.0,
+        "epsilon": 0.01,
+        "steps": 17233
+    },
+    {
+        "episode": 28,
+        "total_reward": 2008.0,
+        "epsilon": 0.01,
+        "steps": 19242
+    },
+    {
+        "episode": 29,
+        "total_reward": 2236.0,
+        "epsilon": 0.01,
+        "steps": 21479
+    },
+    {
+        "episode": 30,
+        "total_reward": 3819.0,
+        "epsilon": 0.01,
+        "steps": 25299
+    },
+    {
+        "episode": 31,
+        "total_reward": 1812.0,
+        "epsilon": 0.01,
+        "steps": 27112
+    },
+    {
+        "episode": 32,
+        "total_reward": 1585.0,
+        "epsilon": 0.01,
+        "steps": 28698
+    },
+    {
+        "episode": 33,
+        "total_reward": 1573.0,
+        "epsilon": 0.01,
+        "steps": 30272
+    },
+    {
+        "episode": 34,
+        "total_reward": 1584.0,
+        "epsilon": 0.01,
+        "steps": 31857
+    }
+]
