@@ -142,4 +142,5 @@ Epsilon-greedy with decay:
 - Dueling DQN architecture
 - Noisy Networks for exploration
 - Multi-step returns
+- Using wandb
 
